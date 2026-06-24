@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    @page {
+      size: A4;
+      margin: 2cm 2cm 2.5cm 2cm;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      font-size: 10.5pt;
+      color: #1a1a2e;
+      line-height: 1.5;
+    }
+
+    /* ── Header ─────────────────────────────────────────── */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 36px;
+      padding-bottom: 24px;
+      border-bottom: 3px solid #1a3a6b;
+    }
+
+    .logo { max-height: 72px; max-width: 200px; }
+
+    .company-name-text {
+      font-size: 22pt;
+      font-weight: 800;
+      color: #1a3a6b;
+      letter-spacing: -0.02em;
+    }
+
+    .company-info {
+      text-align: right;
+      font-size: 8.5pt;
+      color: #555;
+      line-height: 1.7;
+    }
+
+    /* ── Invoice title + meta ────────────────────────────── */
+    .invoice-title-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 28px;
+    }
+
+    .invoice-title {
+      font-size: 28pt;
+      font-weight: 800;
+      color: #1a3a6b;
+      letter-spacing: -0.03em;
+      line-height: 1;
+    }
+
+    .invoice-meta-box {
+      background: #f4f6fb;
+      border-radius: 6px;
+      padding: 14px 18px;
+      font-size: 9pt;
+      line-height: 1.9;
+      min-width: 200px;
+    }
+
+    .invoice-meta-box td:first-child {
+      color: #666;
+      padding-right: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .invoice-meta-box td:last-child {
+      font-weight: 700;
+      color: #1a1a2e;
+    }
+
+    /* ── Bill To ─────────────────────────────────────────── */
+    .bill-to {
+      background: #1a3a6b;
+      color: white;
+      border-radius: 6px;
+      padding: 14px 18px;
+      margin-bottom: 28px;
+    }
+
+    .bill-to-label {
+      font-size: 7.5pt;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      opacity: 0.7;
+      margin-bottom: 6px;
+    }
+
+    .bill-to-name {
+      font-size: 12pt;
+      font-weight: 700;
+      margin-bottom: 2px;
+    }
+
+    .bill-to-details {
+      font-size: 9pt;
+      opacity: 0.85;
+      line-height: 1.6;
+    }
+
+    /* ── Line items table ────────────────────────────────── */
+    .items-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 8px;
+    }
+
+    .items-table thead tr {
+      background: #1a3a6b;
+      color: white;
+    }
+
+    .items-table th {
+      padding: 10px 12px;
+      font-size: 8pt;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      text-align: left;
+    }
+
+    .items-table th.right,
+    .items-table td.right { text-align: right; }
+
+    .items-table tbody tr:nth-child(even) { background: #f8f9fc; }
+
+    .items-table td {
+      padding: 9px 12px;
+      font-size: 9.5pt;
+      border-bottom: 1px solid #eaecf2;
+    }
+
+    .items-table tbody tr:last-child td { border-bottom: none; }
+
+    /* ── Totals ──────────────────────────────────────────── */
+    .totals-wrapper {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 16px;
+      margin-bottom: 32px;
+    }
+
+    .totals-box {
+      width: 280px;
+    }
+
+    .totals-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 5px 0;
+      font-size: 9.5pt;
+      color: #444;
+    }
+
+    .totals-row.grand-total {
+      border-top: 2px solid #1a3a6b;
+      margin-top: 8px;
+      padding-top: 10px;
+      font-size: 13pt;
+      font-weight: 800;
+      color: #1a1a2e;
+    }
+
+    /* ── Notes / payment terms ───────────────────────────── */
+    .notes-section {
+      border-top: 1px solid #dde1ea;
+      padding-top: 16px;
+      margin-top: 8px;
+      font-size: 8.5pt;
+      color: #555;
+      line-height: 1.7;
+    }
+
+    .notes-label {
+      font-weight: 700;
+      color: #1a3a6b;
+      text-transform: uppercase;
+      font-size: 7.5pt;
+      letter-spacing: 0.08em;
+      margin-bottom: 4px;
+    }
+
+    /* ── Footer ──────────────────────────────────────────── */
+    .footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      text-align: center;
+      font-size: 7.5pt;
+      color: #aaa;
+      padding-bottom: 10px;
+      border-top: 1px solid #eaecf2;
+      padding-top: 8px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <div class="header">
+    <div>
+      {% if company.logo_path %}
+        <img class="logo" src="{{ company.logo_path }}" alt="{{ company.name }}">
+      {% else %}
+        <div class="company-name-text">{{ company.name }}</div>
+      {% endif %}
+    </div>
+    <div class="company-info">
+      {{ company.address }}<br>
+      {{ company.email }}<br>
+      {{ company.phone }}<br>
+      VAT Reg: {{ company.vat }}
+    </div>
+  </div>
+
+  <!-- Invoice title + meta -->
+  <div class="invoice-title-row">
+    <div class="invoice-title">INVOICE</div>
+    <div class="invoice-meta-box">
+      <table>
+        <tr><td>Invoice #</td><td>{{ invoice_number }}</td></tr>
+        <tr><td>Date</td><td>{{ invoice_date }}</td></tr>
+        <tr><td>Due Date</td><td>{{ due_date }}</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- Bill To -->
+  <div class="bill-to">
+    <div class="bill-to-label">Bill To</div>
+    <div class="bill-to-name">{{ customer_name }}</div>
+    <div class="bill-to-details">
+      {{ customer_address }}<br>
+      {{ customer_email }}
+    </div>
+  </div>
+
+  <!-- Line items -->
+  <table class="items-table">
+    <thead>
+      <tr>
+        <th style="width:52%">Description</th>
+        <th class="right" style="width:14%">Qty</th>
+        <th class="right" style="width:17%">Unit Price</th>
+        <th class="right" style="width:17%">Amount</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in line_items %}
+      <tr>
+        <td>{{ item.description }}</td>
+        <td class="right">{{ item.quantity }}</td>
+        <td class="right">€{{ "%.2f"|format(item.unit_price) }}</td>
+        <td class="right">€{{ "%.2f"|format(item.quantity * item.unit_price) }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <!-- Totals -->
+  <div class="totals-wrapper">
+    <div class="totals-box">
+      <div class="totals-row">
+        <span>Subtotal</span>
+        <span>€{{ "%.2f"|format(subtotal) }}</span>
+      </div>
+      <div class="totals-row">
+        <span>VAT ({{ vat_rate }}%)</span>
+        <span>€{{ "%.2f"|format(vat_amount) }}</span>
+      </div>
+      <div class="totals-row grand-total">
+        <span>Total Due</span>
+        <span>€{{ "%.2f"|format(total) }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notes -->
+  {% if notes %}
+  <div class="notes-section">
+    <div class="notes-label">Notes &amp; Payment Terms</div>
+    {{ notes }}
+  </div>
+  {% endif %}
+
+  <!-- Footer -->
+  <div class="footer">
+    {{ company.name }} &nbsp;·&nbsp; VAT {{ company.vat }} &nbsp;·&nbsp; {{ company.email }}
+    &nbsp;·&nbsp; Thank you for your business
+  </div>
+
+</body>
+</html>
