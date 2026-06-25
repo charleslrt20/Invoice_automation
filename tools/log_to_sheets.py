@@ -37,7 +37,7 @@ def log_invoice_to_sheets(
             .append(
                 spreadsheetId=spreadsheet_id,
                 range=f"{tab_name}!A:L",
-                valueInputOption="USER_ENTERED",
+                valueInputOption="RAW",
                 body={"values": [row]},
             )
             .execute()

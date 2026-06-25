@@ -1,5 +1,6 @@
 import os
 import base64
+from html import escape
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import (
     Mail, Email, To, Content, Attachment,
@@ -19,21 +20,28 @@ def send_invoice_email(
     from_email = os.environ["SENDGRID_FROM_EMAIL"]
     from_name = os.environ.get("SENDGRID_FROM_NAME", company["name"])
 
+    e_inv  = escape(invoice_number)
+    e_name = escape(to_name)
+    e_co   = escape(company["name"])
+    e_addr = escape(company["address"])
+    e_ph   = escape(company["phone"])
+    e_mail = escape(company["email"])
+
     if language == "fr":
         subject = f"Facture {invoice_number} de {company['name']}"
         html_body = f"""
         <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;color:#333;">
-          <h2 style="color:#1a3a6b;">Facture {invoice_number}</h2>
-          <p>Bonjour {to_name},</p>
+          <h2 style="color:#1a3a6b;">Facture {e_inv}</h2>
+          <p>Bonjour {e_name},</p>
           <p>Veuillez trouver votre facture en pièce jointe.</p>
           <p>Pour toute question, n'hésitez pas à répondre à cet email ou à nous contacter à
-             <a href="mailto:{company['email']}">{company['email']}</a>.</p>
+             <a href="mailto:{e_mail}">{e_mail}</a>.</p>
           <p>Merci de votre confiance.</p>
           <br>
           <p style="color:#555;">
-            <strong>{company['name']}</strong><br>
-            {company['address']}<br>
-            {company['phone']}
+            <strong>{e_co}</strong><br>
+            {e_addr}<br>
+            {e_ph}
           </p>
         </div>
         """
@@ -41,17 +49,17 @@ def send_invoice_email(
         subject = f"Invoice {invoice_number} from {company['name']}"
         html_body = f"""
         <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;color:#333;">
-          <h2 style="color:#1a3a6b;">Invoice {invoice_number}</h2>
-          <p>Dear {to_name},</p>
+          <h2 style="color:#1a3a6b;">Invoice {e_inv}</h2>
+          <p>Dear {e_name},</p>
           <p>Please find your invoice attached to this email.</p>
           <p>If you have any questions, feel free to reply to this email or contact us at
-             <a href="mailto:{company['email']}">{company['email']}</a>.</p>
+             <a href="mailto:{e_mail}">{e_mail}</a>.</p>
           <p>Thank you for your business.</p>
           <br>
           <p style="color:#555;">
-            <strong>{company['name']}</strong><br>
-            {company['address']}<br>
-            {company['phone']}
+            <strong>{e_co}</strong><br>
+            {e_addr}<br>
+            {e_ph}
           </p>
         </div>
         """

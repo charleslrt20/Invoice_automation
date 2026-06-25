@@ -1,4 +1,5 @@
 import os
+import re
 import secrets
 import sys
 from pathlib import Path
@@ -12,7 +13,7 @@ from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, field_validator
 
 # Ensure tools/ is importable
 sys.path.insert(0, str(Path(__file__).parent))
@@ -44,9 +45,9 @@ app = FastAPI(title="Invoice Automation", dependencies=[Depends(verify_credentia
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=["http://localhost:8000", "http://127.0.0.1:8000"],
+    allow_methods=["POST", "GET"],
+    allow_headers=["Authorization", "Content-Type"],
 )
 
 
@@ -67,6 +68,13 @@ class InvoiceRequest(BaseModel):
     vat_rate: float
     notes: Optional[str] = ""
     language: str = "en"
+
+    @field_validator("language")
+    @classmethod
+    def validate_language(cls, v: str) -> str:
+        if v not in ("en", "fr"):
+            raise ValueError("language must be 'en' or 'fr'")
+        return v
 
 
 @app.get("/")
@@ -105,8 +113,8 @@ async def send_invoice(invoice: InvoiceRequest):
     try:
         pdf_bytes = generate_invoice_pdf(invoice_dict, company, language=invoice.language)
         pipeline["steps"]["pdf"] = {"success": True}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"PDF generation failed: {e}")
+    except Exception:
+        raise HTTPException(status_code=500, detail="PDF generation failed")
 
     # Step 2 – Send email (critical — abort if it fails)
     email_result = send_invoice_email(
@@ -119,11 +127,12 @@ async def send_invoice(invoice: InvoiceRequest):
     )
     pipeline["steps"]["email"] = email_result
     if not email_result["success"]:
-        raise HTTPException(status_code=502, detail=f"Email failed: {email_result['message']}")
+        raise HTTPException(status_code=502, detail="Email delivery failed")
 
     # Step 3 – Upload to Google Drive (non-critical)
-    safe_name = invoice.customer_name.replace(" ", "_")
-    filename  = f"Invoice_{invoice.invoice_number}_{safe_name}.pdf"
+    safe_name = re.sub(r"[^\w\-]", "_", invoice.customer_name)
+    safe_num  = re.sub(r"[^\w\-]", "_", invoice.invoice_number)
+    filename  = f"Invoice_{safe_num}_{safe_name}.pdf"
     drive_result = upload_pdf_to_drive(
         pdf_bytes=pdf_bytes,
         filename=filename,
