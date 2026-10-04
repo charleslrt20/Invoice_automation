@@ -56,14 +56,15 @@ class InvoicePDF(FPDF):
         self.language = language
         self.set_auto_page_break(auto=True, margin=20)
         self.set_margins(20, 20, 20)
-        # Register Arial with Unicode support (includes € and other symbols)
-        self.add_font("Arial", style="",  fname=str(FONTS_DIR / "Arial.ttf"))
-        self.add_font("Arial", style="B", fname=str(FONTS_DIR / "Arial-Bold.ttf"))
+        # Register Liberation Sans (metric-compatible, open-license Arial substitute)
+        # with Unicode support (includes € and other symbols)
+        self.add_font("LiberationSans", style="",  fname=str(FONTS_DIR / "LiberationSans-Regular.ttf"))
+        self.add_font("LiberationSans", style="B", fname=str(FONTS_DIR / "LiberationSans-Bold.ttf"))
 
     def footer(self):
         t = TRANSLATIONS.get(self.language, TRANSLATIONS["en"])
         self.set_y(-14)
-        self.set_font("Arial", size=7)
+        self.set_font("LiberationSans", size=7)
         self.set_text_color(*MUTED)
         text = (
             f"{self.company['name']}  ·  {t['vat_reg']} {self.company['vat']}"
@@ -106,14 +107,14 @@ def generate_invoice_pdf(invoice_data: dict, company: dict, language: str = "en"
             logo_rendered = False
 
     if not logo_rendered:
-        pdf.set_font("Arial", style="B", size=16)
+        pdf.set_font("LiberationSans", style="B", size=16)
         pdf.set_text_color(*BRAND)
         pdf.cell(0, 10, company["name"], ln=True)
 
     # Company info block (top-right)
     info_x = pdf.l_margin + page_w - 75
     pdf.set_xy(info_x, pdf.t_margin)
-    pdf.set_font("Arial", size=8)
+    pdf.set_font("LiberationSans", size=8)
     pdf.set_text_color(*MUTED)
     for line in [
         company["address"],
@@ -135,7 +136,7 @@ def generate_invoice_pdf(invoice_data: dict, company: dict, language: str = "en"
     y_section = pdf.get_y()
 
     # Left: big title
-    pdf.set_font("Arial", style="B", size=26)
+    pdf.set_font("LiberationSans", style="B", size=26)
     pdf.set_text_color(*BRAND)
     pdf.set_xy(pdf.l_margin, y_section)
     pdf.cell(100, 14, t["invoice"], ln=False)
@@ -147,7 +148,7 @@ def generate_invoice_pdf(invoice_data: dict, company: dict, language: str = "en"
     pdf.set_fill_color(*BRAND_BG)
     pdf.rect(meta_x, meta_y, 70, box_h, style="F")
 
-    pdf.set_font("Arial", size=8)
+    pdf.set_font("LiberationSans", size=8)
     pdf.set_text_color(*MUTED)
     rows = [
         (t["invoice_num"], invoice_data["invoice_number"]),
@@ -157,10 +158,10 @@ def generate_invoice_pdf(invoice_data: dict, company: dict, language: str = "en"
     pdf.set_xy(meta_x + 3, meta_y + 3)
     for label, value in rows:
         pdf.set_x(meta_x + 3)
-        pdf.set_font("Arial", style="B", size=8)
+        pdf.set_font("LiberationSans", style="B", size=8)
         pdf.set_text_color(*MUTED)
         pdf.cell(24, 6, label)
-        pdf.set_font("Arial", style="B", size=8)
+        pdf.set_font("LiberationSans", style="B", size=8)
         pdf.set_text_color(*DARK)
         pdf.cell(40, 6, value, ln=True)
 
@@ -170,7 +171,7 @@ def generate_invoice_pdf(invoice_data: dict, company: dict, language: str = "en"
     bt_y = pdf.get_y()
     pdf.set_fill_color(*BRAND)
     pdf.rect(pdf.l_margin, bt_y, page_w, 7, style="F")
-    pdf.set_font("Arial", style="B", size=7)
+    pdf.set_font("LiberationSans", style="B", size=7)
     pdf.set_text_color(255, 255, 255)
     pdf.set_xy(pdf.l_margin + 3, bt_y + 1.5)
     pdf.cell(0, 4, t["bill_to"], ln=True)
@@ -181,12 +182,12 @@ def generate_invoice_pdf(invoice_data: dict, company: dict, language: str = "en"
     pdf.rect(pdf.l_margin, bt_body_y, page_w, bt_body_h, style="F")
 
     pdf.set_xy(pdf.l_margin + 4, bt_body_y + 3)
-    pdf.set_font("Arial", style="B", size=10)
+    pdf.set_font("LiberationSans", style="B", size=10)
     pdf.set_text_color(*DARK)
     pdf.cell(0, 5, invoice_data["customer_name"], ln=True)
 
     pdf.set_x(pdf.l_margin + 4)
-    pdf.set_font("Arial", size=8.5)
+    pdf.set_font("LiberationSans", size=8.5)
     pdf.set_text_color(*MUTED)
     address_lines = invoice_data["customer_address"].replace("\r", "").split("\n")
     address_lines.append(invoice_data["customer_email"])
@@ -205,7 +206,7 @@ def generate_invoice_pdf(invoice_data: dict, company: dict, language: str = "en"
     th_y = pdf.get_y()
     pdf.set_fill_color(*BRAND)
     pdf.rect(pdf.l_margin, th_y, page_w, 8, style="F")
-    pdf.set_font("Arial", style="B", size=8)
+    pdf.set_font("LiberationSans", style="B", size=8)
     pdf.set_text_color(255, 255, 255)
     pdf.set_xy(pdf.l_margin, th_y)
     for i, (hdr, w, al) in enumerate(zip(headers, col_w, aligns)):
@@ -214,7 +215,7 @@ def generate_invoice_pdf(invoice_data: dict, company: dict, language: str = "en"
     pdf.ln()
 
     # Rows
-    pdf.set_font("Arial", size=9)
+    pdf.set_font("LiberationSans", size=9)
     for idx, item in enumerate(invoice_data["line_items"]):
         row_y = pdf.get_y()
         fill  = idx % 2 == 1
@@ -249,14 +250,14 @@ def generate_invoice_pdf(invoice_data: dict, company: dict, language: str = "en"
 
     # ── Totals ───────────────────────────────────────────────────────────────
     totals_x = pdf.l_margin + page_w - 75
-    pdf.set_font("Arial", size=9)
+    pdf.set_font("LiberationSans", size=9)
     pdf.set_text_color(*MUTED)
 
     def totals_row(label, value, bold=False, large=False):
         pdf.set_x(totals_x)
         sz = 11 if large else 9
         style = "B" if bold or large else ""
-        pdf.set_font("Arial", style=style, size=sz)
+        pdf.set_font("LiberationSans", style=style, size=sz)
         pdf.set_text_color(*DARK if bold or large else MUTED)
         pdf.cell(40, 7, label)
         pdf.set_text_color(*DARK)
@@ -284,10 +285,10 @@ def generate_invoice_pdf(invoice_data: dict, company: dict, language: str = "en"
         pdf.line(pdf.l_margin, n_y, pdf.l_margin + page_w, n_y)
         pdf.ln(4)
 
-        pdf.set_font("Arial", style="B", size=7)
+        pdf.set_font("LiberationSans", style="B", size=7)
         pdf.set_text_color(*BRAND)
         pdf.cell(0, 5, t["notes_title"], ln=True)
-        pdf.set_font("Arial", size=8.5)
+        pdf.set_font("LiberationSans", size=8.5)
         pdf.set_text_color(*MUTED)
         pdf.multi_cell(page_w, 5, notes)
 

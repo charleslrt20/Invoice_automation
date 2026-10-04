@@ -1,11 +1,18 @@
 import os
-import base64
+import re
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from email.mime.application import MIMEApplication
+from email.header import Header
+from email.utils import formataddr
 from html import escape
-from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import (
-    Mail, Email, To, Content, Attachment,
-    FileContent, FileName, FileType, Disposition,
-)
+
+_CRLF = re.compile(r"[\r\n]")
+
+
+def _strip_crlf(value: str) -> str:
+    return _CRLF.sub(" ", value)
 
 
 def send_invoice_email(
@@ -16,9 +23,12 @@ def send_invoice_email(
     company: dict,
     language: str = "en",
 ) -> dict:
-    api_key = os.environ["SENDGRID_API_KEY"]
-    from_email = os.environ["SENDGRID_FROM_EMAIL"]
-    from_name = os.environ.get("SENDGRID_FROM_NAME", company["name"])
+    gmail_address = os.environ["GMAIL_ADDRESS"]
+    gmail_app_password = os.environ["GMAIL_APP_PASSWORD"]
+    from_name = os.environ.get("GMAIL_FROM_NAME", company["name"])
+
+    to_name = _strip_crlf(to_name)
+    invoice_number = _strip_crlf(invoice_number)
 
     e_inv  = escape(invoice_number)
     e_name = escape(to_name)
@@ -64,29 +74,27 @@ def send_invoice_email(
         </div>
         """
 
-    message = Mail(
-        from_email=Email(from_email, from_name),
-        to_emails=To(to_email, to_name),
-        subject=subject,
-        html_content=Content("text/html", html_body),
-    )
+    message = MIMEMultipart()
+    message["From"] = formataddr((from_name, gmail_address))
+    message["To"] = formataddr((to_name, to_email))
+    message["Subject"] = Header(subject, "utf-8")
+    message.attach(MIMEText(html_body, "html"))
 
-    encoded_pdf = base64.b64encode(pdf_bytes).decode()
-    attachment = Attachment(
-        file_content=FileContent(encoded_pdf),
-        file_name=FileName(f"Invoice_{invoice_number}.pdf"),
-        file_type=FileType("application/pdf"),
-        disposition=Disposition("attachment"),
+    attachment = MIMEApplication(pdf_bytes, _subtype="pdf")
+    attachment.add_header(
+        "Content-Disposition", "attachment", filename=f"Invoice_{invoice_number}.pdf"
     )
-    message.attachment = attachment
+    message.attach(attachment)
 
     try:
-        sg = SendGridAPIClient(api_key)
-        response = sg.send(message)
+        with smtplib.SMTP("smtp.gmail.com", 587) as server:
+            server.starttls()
+            server.login(gmail_address, gmail_app_password)
+            server.sendmail(gmail_address, [to_email], message.as_string())
         return {
-            "success": response.status_code == 202,
-            "status_code": response.status_code,
-            "message": "Email sent" if response.status_code == 202 else "Unexpected status",
+            "success": True,
+            "status_code": 250,
+            "message": "Email sent",
         }
     except Exception as e:
         return {"success": False, "status_code": 0, "message": str(e)}
