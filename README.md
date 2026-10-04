@@ -48,7 +48,7 @@ Fill in `.env` with your own values — see the table below.
 | --- | --- |
 | `APP_USERNAME` / `APP_PASSWORD` | Login for the dashboard (HTTP Basic Auth) |
 | `COMPANY_NAME`, `COMPANY_ADDRESS`, `COMPANY_EMAIL`, `COMPANY_PHONE`, `COMPANY_VAT` | Your business details, printed on every invoice |
-| `COMPANY_LOGO_PATH` | Local file path to your logo (optional) |
+| `COMPANY_LOGO_PATH` | Local file path to your logo (optional) — `static/logo.svg` is a generic placeholder; swap in your own logo file locally and point this at it (don't commit a real logo to a public repo) |
 | `GMAIL_ADDRESS` / `GMAIL_APP_PASSWORD` | Gmail account used to send invoices — use a [Gmail App Password](https://support.google.com/accounts/answer/185833), never your real password |
 | `GMAIL_FROM_NAME` | Display name on outgoing emails |
 | `GOOGLE_DRIVE_FOLDER_ID` | Google Drive folder where PDFs are archived |
